@@ -1,6 +1,6 @@
 import json
 
-from src.infra_fail_mngr.memory import Memory
+from ..memory import Memory
 
 
 class MockLLM:

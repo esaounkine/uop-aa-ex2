@@ -1,12 +1,16 @@
 import inspect
 
+from .tools import estimate_impact, assign_repair_crew, detect_failure_nodes
+
 """
 This module is an abstraction layer to declaratively define the tools available to the orchestrator agent.
 It relies on the `tools` module to register the available tools.
 """
 
 ENABLED_TOOLS = [
-    # TODO Add function references for each tool available
+    assign_repair_crew,
+    detect_failure_nodes,
+    estimate_impact,
 ]
 
 
