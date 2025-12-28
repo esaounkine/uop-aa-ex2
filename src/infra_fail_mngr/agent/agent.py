@@ -1,14 +1,14 @@
 import json
 
-from ..domain import LLMService
+from ..llm.llm_service import LLMService
 from ..prompts.system_prompts import get_system_prompt
 from ..states import State
 from ..tools import SystemTools, AgentTools
 
 
 class InfraAgent:
-    def __init__(self, llm: LLMService, system_tools: SystemTools, agent_tools: AgentTools):
-        self.llm = llm
+    def __init__(self, llm_service: LLMService, system_tools: SystemTools, agent_tools: AgentTools):
+        self.llm_service = llm_service
         self.sys = system_tools
         self.tools = agent_tools
         self.max_steps = 10
@@ -93,8 +93,11 @@ class InfraAgent:
             "conversation_history": self.memory['plan_history']
         }
 
-        system_prompt = get_system_prompt(self.tool_descriptions, context)
-        response_str = self.llm.generate(system_prompt, self.memory)
+        response_str = self.llm_service.handle_request(
+            get_system_prompt(),
+            context,
+            self.tool_descriptions,
+        )
 
         try:
             decision = json.loads(response_str)

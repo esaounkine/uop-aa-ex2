@@ -1,2 +1,2 @@
-from .llm import MockLLM
-from .llm_connector import LLMConnector
+from .llm_client import LLMClientImpl
+from .llm_service import LLMServiceImpl
