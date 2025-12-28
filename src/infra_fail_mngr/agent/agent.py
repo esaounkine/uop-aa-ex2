@@ -1,6 +1,7 @@
 import json
 
 from ..domain import LLMService
+from ..prompts.system_prompts import get_system_prompt
 from ..states import State
 from ..tools import SystemTools, AgentTools
 
@@ -11,6 +12,7 @@ class InfraAgent:
         self.sys = system_tools
         self.tools = agent_tools
         self.max_steps = 10
+        self.tool_descriptions = self.tools.get_tool_descriptions()
 
         self.state = State.INIT
         self.memory = {}
@@ -87,33 +89,11 @@ class InfraAgent:
         context = {
             "failures": self.memory['failures'],
             "impact_report": self.memory['impact_report'],
+            # TODO: limit the history to max_steps
             "conversation_history": self.memory['plan_history']
         }
 
-        # TODO: move the prompt to ../prompts/
-        system_prompt = f"""
-        You are an Infrastructure crisis manager.
-        Tools Available:
-        {self.tools.get_tool_descriptions()}
-        
-        Context: {json.dumps(context, indent=2)}
-        
-        Response format:
-        {
-            "thoughts": "string", # ideas behind the decision
-            "action": "string", # function name of one of the tools available
-            "arguments": {
-                # arguments for the function
-                "node_ids": ["node1", "node2"],
-                "crew_ids": ["crew1", "crew2"]
-            }
-        }
-        
-        Decide the next step. 
-        - If you need information (e.g. Weather), call that tool.
-        - If you are ready to fix, call 'assign_repair_crew'.
-        """
-
+        system_prompt = get_system_prompt(self.tool_descriptions, context)
         response_str = self.llm.generate(system_prompt, self.memory)
 
         try:
