@@ -1,5 +1,9 @@
+from src.infra_fail_mngr.wire import wire
+
+
 def main():
-    print("Hello from ex2!")
+    agent = wire()
+    agent.run_to_completion()
 
 
 if __name__ == "__main__":

@@ -17,6 +17,12 @@ class InfraAgent:
         self.state = State.INIT
         self.memory = {}
 
+    def run_to_completion(self):
+        step = 0
+        while self.state != State.FINAL and step < self.max_steps:
+            self.run_step()
+            step += 1
+
     def run_step(self):
         print(f"--- STATE: {self.state.name} ---")
 

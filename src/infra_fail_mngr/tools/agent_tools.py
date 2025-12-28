@@ -8,6 +8,7 @@ class AgentTools:
     def __init__(self, repo: AgentRepository):
         self.repo = repo
         self.AGENT_TOOLS = [
+            # TODO: expose this one system function to the agent
             self.assign_repair_crew,
             self.get_weather_at_location,
         ]
