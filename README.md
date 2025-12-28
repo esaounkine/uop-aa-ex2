@@ -1,4 +1,6 @@
-## Agent
+## Conceptual
+
+### Agent
 
 The agent is implemented as a finite state machine (FSM).
 
@@ -11,7 +13,7 @@ The states represent steps taken by the algorithm to:
 - validate the solution
 - reschedule, if necessary to cover for cascading failures
 
-## Flow
+### Flow
 
 The FSM represents the following flow
 
@@ -86,3 +88,81 @@ flowchart TD
     %% Add label to the feedback loop
     linkStyle 16 stroke:red,stroke-width:3px,color:red;
 ```
+
+## Setup
+
+### Prerequisites
+
+- Python 3.12 or higher
+- [uv](https://docs.astral.sh/uv/) package manager
+
+### Installing uv
+
+#### Mac/Linux
+
+```bash
+# Install uv using the official installer
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Alternatively, you can use Homebrew on macOS:
+
+```bash
+brew install uv
+```
+
+#### Windows
+
+Using PowerShell:
+
+```powershell
+# Install uv using the official installer
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+Alternatively, you can use `pip`:
+
+```powershell
+pip install uv
+```
+
+### Project Setup
+
+#### Mac/Linux
+
+```bash
+# Clone the repository (if not already done)
+cd /path/to/project
+
+# Create a virtual environment and install dependencies
+uv sync
+
+# Activate the virtual environment (this step might be redundant)
+source .venv/bin/activate
+```
+
+#### Windows
+
+```powershell
+# Clone the repository (if not already done)
+cd C:\path\to\project
+
+# Create a virtual environment and install dependencies
+uv sync
+
+# Activate the virtual environment (this step might be redundant)
+.venv\Scripts\activate
+```
+
+### Running the Project
+
+Once the virtual environment is activated, you can run the project:
+
+```bash
+# Run the main application
+python -m src.infra_fail_mngr
+
+# Run tests
+python -m pytest tests/
+```
+
