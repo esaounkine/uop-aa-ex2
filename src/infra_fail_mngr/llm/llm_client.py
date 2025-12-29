@@ -15,11 +15,13 @@ class LLMClientImpl(LLMClient):
     """
 
     def generate(self, system_prompt):
-        response = self.responses[self.response_index]
+        if not self.responses or len(self.responses) == 0:
+            return ""
+
+        _index = min(self.response_index, len(self.responses) - 1)
+
+        response = self.responses[_index]
 
         self.response_index += 1
 
         return response
-
-    def set_responses(self, responses):
-        self.responses = responses
