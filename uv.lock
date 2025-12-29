@@ -21,6 +21,7 @@ dev = [
     { name = "pytest" },
     { name = "pytest-describe" },
     { name = "pytest-mock" },
+    { name = "pytest-spec" },
 ]
 
 [package.metadata]
@@ -30,6 +31,7 @@ dev = [
     { name = "pytest", specifier = ">=9.0.2" },
     { name = "pytest-describe", specifier = ">=3.1.0" },
     { name = "pytest-mock", specifier = ">=3.15.1" },
+    { name = "pytest-spec", specifier = ">=5.2.0" },
 ]
 
 [[package]]
@@ -106,4 +108,13 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/68/14/eb014d26be205d38ad5ad20d9a80f7d201472e08167f0bb4361e251084a9/pytest_mock-3.15.1.tar.gz", hash = "sha256:1849a238f6f396da19762269de72cb1814ab44416fa73a8686deac10b0d87a0f", size = 34036, upload-time = "2025-09-16T16:37:27.081Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/5a/cc/06253936f4a7fa2e0f48dfe6d851d9c56df896a9ab09ac019d70b760619c/pytest_mock-3.15.1-py3-none-any.whl", hash = "sha256:0a25e2eb88fe5168d535041d09a4529a188176ae608a6d249ee65abc0949630d", size = 10095, upload-time = "2025-09-16T16:37:25.734Z" },
+]
+
+[[package]]
+name = "pytest-spec"
+version = "5.2.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/98/1d/38d5f61234217e243799406d840525b064d78b5c0b04a797c4daa67b6a81/pytest_spec-5.2.0.tar.gz", hash = "sha256:8a29edfcecd4a407036651973b254c89c0f8d6a82da4e06ab8af95ee9a9afb09", size = 1193771, upload-time = "2025-10-08T21:20:46.903Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f0/f7/90eb2c07b7c776ed7360c6ebe135741c8f97c4b6e69123f05a644afa7b47/pytest_spec-5.2.0-py3-none-any.whl", hash = "sha256:25e1b790c33456b0f7285429f8ccac5fc721a8a327c1dfa9bb23810a12ec8589", size = 15281, upload-time = "2025-10-08T21:20:45.381Z" },
 ]
