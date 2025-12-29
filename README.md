@@ -154,7 +154,7 @@ uv sync
 .venv\Scripts\activate
 ```
 
-### Running the Project
+### Running the project
 
 Once the virtual environment is activated, you can run the project:
 
@@ -162,5 +162,11 @@ Once the virtual environment is activated, you can run the project:
 
 ```bash
 uv run python -m infra_fail_mngr.main
+```
+
+#### Run all tests
+
+```bash
+uv run pytest
 ```
 
