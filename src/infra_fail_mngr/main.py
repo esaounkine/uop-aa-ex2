@@ -1,4 +1,4 @@
-from src.infra_fail_mngr.wire import wire
+from .wire import wire
 
 
 def main():

@@ -158,11 +158,9 @@ uv sync
 
 Once the virtual environment is activated, you can run the project:
 
-```bash
-# Run the main application
-python -m src.infra_fail_mngr
+#### Run the main application
 
-# Run tests
-python -m pytest tests/
+```bash
+uv run python -m infra_fail_mngr.main
 ```
 
