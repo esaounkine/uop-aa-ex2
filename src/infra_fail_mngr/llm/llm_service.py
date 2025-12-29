@@ -27,6 +27,9 @@ class LLMServiceImpl(LLMService):
 
         print(f"Raw LLM response: {res_str}")
 
+        if not res_str or res_str == "":
+            raise ValueError("LLM returned empty string")
+
         res_json = json.loads(res_str)
 
         print(f"Parsed LLM response: {res_json}")
