@@ -15,7 +15,6 @@ def agent_base(mocker):
     return InfraAgent(llm_service, system_tools, agent_tools)
 
 
-@pytest.mark.unit
 def describe_infra_agent():
     def describe_run_step():
         def describe_when_state_is_init():

@@ -8,7 +8,6 @@ from src.infra_fail_mngr.prompts.prompt_formatting import (
     include_tools
 )
 
-@pytest.mark.unit
 def describe_prompt_formatting():
 
     def describe_include_context():

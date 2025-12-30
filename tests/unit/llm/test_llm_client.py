@@ -2,7 +2,6 @@ import pytest
 
 from src.infra_fail_mngr.llm import LLMClientImpl
 
-@pytest.mark.unit
 def describe_llm_client_impl():
 
     def describe_generate():

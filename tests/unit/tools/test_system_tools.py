@@ -3,7 +3,6 @@ import pytest
 from src.infra_fail_mngr.tools.system_tools import SystemTools
 
 
-@pytest.mark.unit
 def describe_system_tools():
     def describe_detect_failure_nodes():
         def describe_when_no_failures():

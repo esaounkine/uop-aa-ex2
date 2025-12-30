@@ -6,7 +6,6 @@ from src.infra_fail_mngr.llm.llm_client import LLMClientImpl
 from src.infra_fail_mngr.llm.llm_service import LLMServiceImpl
 
 
-@pytest.mark.unit
 def describe_llm_service_impl():
     def describe_handle_request():
         def describe_when_valid_json_response():

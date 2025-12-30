@@ -39,7 +39,13 @@ uv run pytest
 ### Run only unit tests
 
 ```bash
-uv run pytest -m unit
+uv run pytest tests/unit
+```
+
+### Run only end-to-end tests
+
+```bash
+uv run pytest tests/e2e
 ```
 
 ## Test structure
@@ -47,7 +53,6 @@ uv run pytest -m unit
 Tests follow a nested describe pattern similar to Jest:
 
 ```python
-@pytest.mark.unit
 def describe_component():
     """Top-level test suite for a component."""
     
@@ -73,8 +78,9 @@ This creates a test path like:
 describe_component::describe_method::describe_when_condition::it_should_do_something
 ```
 
-The `@pytest.mark.unit` is used to mark the test as a unit test.
-Use this to filter out e2e or template tests when running unit tests.
+Tests are separated into two categories:
+- `unit`: Tests for individual components in isolation
+- `e2e`: End-to-end tests for integration and workflow validation
 
 ## Naming conventions
 
@@ -96,6 +102,3 @@ def describe_when_user_logged_in():
     def it_should_access_dashboard(logged_in_user):
         assert logged_in_user.can_access_dashboard()
 ```
-
-Shared fixtures are defined in `tests/conftest.py` and are available to all tests.
-Test-specific fixtures can be defined within describe blocks.
