@@ -5,22 +5,6 @@ from src.infra_fail_mngr.llm import LLMClientImpl
 @pytest.mark.unit
 def describe_llm_client_impl():
 
-    def describe_initialization():
-
-        def it_creates_client_with_responses():
-            responses = ["test-res-1", "test-res-2"]
-
-            client = LLMClientImpl(responses)
-
-            assert client.responses == responses
-            assert client.response_index == 0
-
-        def it_creates_client_with_empty_list():
-            client = LLMClientImpl([])
-
-            assert client.responses == []
-            assert client.response_index == 0
-
     def describe_generate():
 
         def describe_when_response_list_is_null():

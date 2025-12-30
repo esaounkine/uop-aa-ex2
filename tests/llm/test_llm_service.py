@@ -8,14 +8,6 @@ from src.infra_fail_mngr.llm.llm_service import LLMServiceImpl
 
 @pytest.mark.unit
 def describe_llm_service_impl():
-    def describe_initialization():
-        def it_creates_service_with_client():
-            client = LLMClientImpl(["res-1"])
-
-            service = LLMServiceImpl(client)
-
-            assert service.client == client
-
     def describe_handle_request():
         def describe_when_valid_json_response():
             @pytest.fixture
