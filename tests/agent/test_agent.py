@@ -178,11 +178,13 @@ def describe_infra_agent():
                     "pending_action": {
                         "action": "assign_repair_crew",
                         "arguments": {"node_ids": ["node-1"], "crew_ids": ["crew-1"]}
-                    }
+                    },
+                    "failures": ["node-1"],
+                    "plan_history": []
                 }
                 return agent_base
 
-            def describe_and_assignment_completes():
+            def describe_and_all_assignments_succeed():
                 @pytest.fixture
                 def agent(agent_in_execution):
                     agent_in_execution.sys.assign_repair_crew.return_value = {
@@ -210,6 +212,47 @@ def describe_infra_agent():
                     agent.run_step()
 
                     assert agent.state == State.RESCHEDULING
+
+            def describe_and_some_assignments_fail():
+                @pytest.fixture
+                def agent(agent_in_execution):
+                    agent_in_execution.memory["pending_action"]["arguments"] = {
+                        "node_ids": ["node-1", "node-2", "node-3"],
+                        "crew_ids": ["crew-1", "crew-2", "crew-3"]
+                    }
+                    agent_in_execution.memory["failures"] = ["node-1", "node-2", "node-3"]
+                    agent_in_execution.sys.assign_repair_crew.return_value = {
+                        "status": "completed",
+                        "details": {
+                            "node-1": "Assigned",
+                            "node-2": "Failed",
+                            "node-3": "Assigned"
+                        }
+                    }
+                    return agent_in_execution
+
+                def it_stores_execution_result(agent):
+                    agent.run_step()
+
+                    assert agent.memory["execution_result"]["status"] == "completed"
+                    assert agent.memory["execution_result"]["details"]["node-2"] == "Failed"
+
+                def it_updates_failures_to_only_failed_nodes(agent):
+                    agent.run_step()
+
+                    assert agent.memory["failures"] == ["node-2"]
+
+                def it_adds_failure_to_plan_history(agent):
+                    agent.run_step()
+
+                    assert len(agent.memory["plan_history"]) == 1
+                    assert agent.memory["plan_history"][0]["role"] == "execution_result"
+                    assert "node-2" in agent.memory["plan_history"][0]["message"]
+
+                def it_transitions_back_to_repair_planning(agent):
+                    agent.run_step()
+
+                    assert agent.state == State.REPAIR_PLANNING
 
         def describe_when_state_is_rescheduling():
             @pytest.fixture

@@ -77,11 +77,23 @@ class InfraAgent:
             print(f"[EXECUTION] Dispatching Crews: {args}")
             result = self.sys.assign_repair_crew(**args)
 
-            # TODO: handle the result.details containing failed assignments, e.g. {"node-1": "Assigned"},
-            #  in which case it makes sense taking a step back and go back into repair planning
-
             self.memory['execution_result'] = result
-            self.state = State.RESCHEDULING
+
+            details = result.get('details', {})
+            failed_nodes = [node for node, status in details.items() if status == "Failed"]
+
+            if failed_nodes:
+                print(f"[EXECUTION] Some assignments failed: {failed_nodes}")
+                self.memory['failures'] = failed_nodes
+                self.memory['plan_history'].append({
+                    "role": "execution_result",
+                    "message": f"Assignment failed for nodes: {failed_nodes}",
+                    "details": details
+                })
+                self.state = State.REPAIR_PLANNING
+            else:
+                print("[EXECUTION] All assignments succeeded")
+                self.state = State.RESCHEDULING
             return
 
         # TODO:
