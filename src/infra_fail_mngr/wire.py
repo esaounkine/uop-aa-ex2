@@ -3,6 +3,7 @@ from .domain import SystemRepository, AgentRepository
 from .llm import LLMServiceImpl, LLMClientImpl
 from .tools import SystemTools, AgentTools
 
+
 class InlineSystemRepo(SystemRepository):
     def get_failed_nodes(self):
         return ["node1", "node2"]
@@ -12,6 +13,7 @@ class InlineSystemRepo(SystemRepository):
 
     def assign_crew(self, node_id, crew_id):
         return True
+
 
 class InlineAgentRepo(AgentRepository):
     def get_available_crews(self):
@@ -40,6 +42,8 @@ def wire() -> InfraAgent:
     system_tools = SystemTools(system_repo)
 
     agent_repo: AgentRepository = InlineAgentRepo()
-    agent_tools = AgentTools(agent_repo)
+    agent_tools = AgentTools(agent_repo, [
+        system_tools.assign_repair_crew
+    ])
 
     return InfraAgent(llm_service, system_tools, agent_tools)

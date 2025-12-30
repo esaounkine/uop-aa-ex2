@@ -5,13 +5,12 @@ from ..domain import AgentRepository
 
 
 class AgentTools:
-    def __init__(self, repo: AgentRepository):
+    def __init__(self, repo: AgentRepository, additional_tools: list):
         self.repo = repo
         self.AGENT_TOOLS = [
-            # TODO: expose this one system function to the agent
-            self.assign_repair_crew,
             self.get_weather_at_location,
         ]
+        self.AGENT_TOOLS.extend(additional_tools)
 
     def get_weather_at_location(self, location: str, **kwargs) -> Dict:
         """Returns metrics for a node."""
