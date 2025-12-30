@@ -28,4 +28,7 @@ class SystemTools:
             success = self.repo.assign_crew(node, crew)
             assignments[node] = "Assigned" if success else "Failed"
 
-        return {"status": "completed", "details": assignments}
+        return {
+            "status": "completed",
+            "details": assignments,
+        }

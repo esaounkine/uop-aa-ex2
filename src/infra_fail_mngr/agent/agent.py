@@ -57,7 +57,7 @@ class InfraAgent:
             return
 
         elif self.state == State.REPAIR_PLANNING:
-            self._handle_planning_step()
+            self.handle_planning_step()
             return
 
         elif self.state == State.EXECUTION:
@@ -66,6 +66,9 @@ class InfraAgent:
 
             print(f"[EXECUTION] Dispatching Crews: {args}")
             result = self.sys.assign_repair_crew(**args)
+
+            # TODO: handle the result.details containing failed assignments, e.g. {"node-1": "Assigned"},
+            #  in which case it makes sense taking a step back and go back into repair planning
 
             self.memory['execution_result'] = result
             self.state = State.RESCHEDULING
@@ -91,7 +94,7 @@ class InfraAgent:
                 self.state = State.FINAL
             return
 
-    def _handle_planning_step(self):
+    def handle_planning_step(self):
         context = {
             "failures": self.memory['failures'],
             "impact_report": self.memory['impact_report'],
