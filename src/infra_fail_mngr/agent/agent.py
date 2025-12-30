@@ -109,19 +109,15 @@ class InfraAgent:
                 self._transition_state(State.RESCHEDULING, "assignments_succeeded", {"details": details})
             return
 
-        # TODO:
-        #  1. Review the implementation: currently, we assign a crew and then check for new failures;
-        #  this ignores the case where by the time a crew is assigned, there's a new failure where it can
-        #  be used better.
-        #  2. Review the maximum steps to reschedule - the flow should not enter the analysis paralysis.
         elif self.state == State.RESCHEDULING:
-            new_failures = self.sys.detect_failure_nodes()
+            existing_failures = self.memory['failures'] if self.memory else []
+            new_failures = [node for node in self.sys.detect_failure_nodes() if node not in existing_failures]
 
             if new_failures:
-                print(f"[ALERT] Cascading failure detected: {new_failures}")
+                print(f"[ALERT] Cascading failures detected: {new_failures}")
                 self._transition_state(State.FAILURE_DETECTION, "cascading_failures", {"new_failures": new_failures})
             else:
-                print("[SUCCESS] Good to progress with the repairs")
+                print("[SUCCESS] Nothing new, good to proceed with the repairs")
                 self._transition_state(State.FINAL, "repairs_completed", {})
             return
 

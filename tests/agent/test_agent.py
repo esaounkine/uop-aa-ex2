@@ -325,7 +325,7 @@ def describe_infra_agent():
             def describe_and_cascading_failures():
                 @pytest.fixture
                 def agent(agent_in_rescheduling):
-                    agent_in_rescheduling.sys.detect_failure_nodes.return_value = ["node-3"]
+                    agent_in_rescheduling.sys.detect_failure_nodes.return_value = ["node-4"]
                     return agent_in_rescheduling
 
                 def it_transitions_to_failure_detection(agent):
@@ -335,7 +335,7 @@ def describe_infra_agent():
                     assert agent.step_history[-1]["from_state"] == State.RESCHEDULING.name
                     assert agent.step_history[-1]["to_state"] == State.FAILURE_DETECTION.name
                     assert agent.step_history[-1]["action"] == "cascading_failures"
-                    assert agent.step_history[-1]["data"] == {"new_failures": ["node-3"]}
+                    assert agent.step_history[-1]["data"] == {"new_failures": ["node-4"]}
 
     def describe_run_to_completion():
         def describe_when_no_failures():
