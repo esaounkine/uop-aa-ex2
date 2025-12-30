@@ -19,12 +19,22 @@ class InfraAgent:
         self.state = State.INIT
         self.memory = {}
         self.retry_count = 0
+        self.step_history = []
 
     def run_to_completion(self):
         step = 0
         while self.state != State.FINAL and step < self.max_steps:
             self.run_step()
             step += 1
+
+    def _transition_state(self, to_state: State, action: str, data: dict = None):
+        self.step_history.append({
+            "from_state": self.state.name,
+            "to_state": to_state.name,
+            "action": action,
+            "data": data or {}
+        })
+        self.state = to_state
 
     def run_step(self):
         print(f"--- STATE: {self.state.name} ---")
@@ -35,7 +45,7 @@ class InfraAgent:
                 "impact_report": {},
                 "plan_history": []
             }
-            self.state = State.FAILURE_DETECTION
+            self._transition_state(State.FAILURE_DETECTION, "initialize", {})
             return
 
         elif self.state == State.FAILURE_DETECTION:
@@ -43,11 +53,11 @@ class InfraAgent:
 
             if not failures:
                 print("[SYSTEM] No failures detected. System Healthy.")
-                self.state = State.FINAL
+                self._transition_state(State.FINAL, "no_failures_detected", {})
             else:
                 self.memory['failures'] = failures
                 print(f"[SYSTEM] Detected: {failures}")
-                self.state = State.IMPACT_ANALYSIS
+                self._transition_state(State.IMPACT_ANALYSIS, "failures_detected", {"failures": failures})
             return
 
         elif self.state == State.IMPACT_ANALYSIS:
@@ -56,7 +66,7 @@ class InfraAgent:
                 report[node] = self.sys.estimate_impact(node_id=node)
 
             self.memory['impact_report'] = report
-            self.state = State.REPAIR_PLANNING
+            self._transition_state(State.REPAIR_PLANNING, "impact_analyzed", {"impact_report": report})
             return
 
         elif self.state == State.REPAIR_PLANNING:
@@ -65,7 +75,7 @@ class InfraAgent:
                 self.retry_count += 1
                 if self.retry_count >= self.max_retries:
                     print(f"[ERROR] Max retries ({self.max_retries}) reached. Transitioning to FINAL state.")
-                    self.state = State.FINAL
+                    self._transition_state(State.FINAL, "max_retries_reached", {"retry_count": self.retry_count})
             else:
                 self.retry_count = 0
             return
@@ -90,10 +100,13 @@ class InfraAgent:
                     "message": f"Assignment failed for nodes: {failed_nodes}",
                     "details": details
                 })
-                self.state = State.REPAIR_PLANNING
+                self._transition_state(State.REPAIR_PLANNING, "assignments_failed", {
+                    "failed_nodes": failed_nodes,
+                    "details": details
+                })
             else:
                 print("[EXECUTION] All assignments succeeded")
-                self.state = State.RESCHEDULING
+                self._transition_state(State.RESCHEDULING, "assignments_succeeded", {"details": details})
             return
 
         # TODO:
@@ -102,18 +115,14 @@ class InfraAgent:
         #  be used better.
         #  2. Review the maximum steps to reschedule - the flow should not enter the analysis paralysis.
         elif self.state == State.RESCHEDULING:
-            # Check for cascading failures
             new_failures = self.sys.detect_failure_nodes()
 
-            # Filter out the ones we just fixed? 
-            # Or assume detect_nodes returns CURRENT broken nodes.
             if new_failures:
                 print(f"[ALERT] Cascading failure detected: {new_failures}")
-                # Reset partial memory but keep history?
-                self.state = State.FAILURE_DETECTION
+                self._transition_state(State.FAILURE_DETECTION, "cascading_failures", {"new_failures": new_failures})
             else:
                 print("[SUCCESS] Good to progress with the repairs")
-                self.state = State.FINAL
+                self._transition_state(State.FINAL, "repairs_completed", {})
             return
 
     def handle_planning_step(self):
@@ -141,17 +150,23 @@ class InfraAgent:
             if tool_name == "assign_repair_crew":
                 # TERMINAL ACTION
                 self.memory['pending_action'] = decision
-                self.state = State.EXECUTION
+                self._transition_state(State.EXECUTION, "llm_decision_assign_crew", {
+                    "decision": decision
+                })
                 return True
 
             else:
                 tool_func = self.tools.get_tool(tool_name)
                 if tool_func:
                     result = tool_func(**args)
-                    # Add to history so LLM sees it in next loop
                     self.memory['plan_history'].append({
                         "role": "tool_output",
                         "tool": tool_name,
+                        "result": result
+                    })
+                    self._transition_state(self.state, "llm_decision_use_tool", {
+                        "tool": tool_name,
+                        "arguments": args,
                         "result": result
                     })
                     return True
@@ -170,3 +185,11 @@ class InfraAgent:
                 "message": "Invalid JSON response from LLM"
             })
             return False
+
+    def get_summary(self):
+        return {
+            "current_state": self.state.name,
+            "total_steps": len(self.step_history),
+            "failures_detected": self.memory.get('failures', []),
+            "execution_result": self.memory.get('execution_result'),
+        }

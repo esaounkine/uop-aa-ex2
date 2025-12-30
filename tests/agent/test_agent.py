@@ -34,6 +34,10 @@ def describe_infra_agent():
                 agent.run_step()
 
                 assert agent.state == State.FAILURE_DETECTION
+                assert agent.step_history[-1]["from_state"] == State.INIT.name
+                assert agent.step_history[-1]["to_state"] == State.FAILURE_DETECTION.name
+                assert agent.step_history[-1]["action"] == "initialize"
+                assert agent.step_history[-1]["data"] == {}
 
         def describe_when_state_is_failure_detection():
             @pytest.fixture
@@ -52,6 +56,10 @@ def describe_infra_agent():
                     agent.run_step()
 
                     assert agent.state == State.FINAL
+                    assert agent.step_history[-1]["from_state"] == State.FAILURE_DETECTION.name
+                    assert agent.step_history[-1]["to_state"] == State.FINAL.name
+                    assert agent.step_history[-1]["action"] == "no_failures_detected"
+                    assert agent.step_history[-1]["data"] == {}
 
                 def it_calls_detect_failure_nodes(agent):
                     agent.run_step()
@@ -102,6 +110,13 @@ def describe_infra_agent():
                     agent.run_step()
 
                     assert agent.state == State.REPAIR_PLANNING
+                    assert agent.step_history[-1]["from_state"] == State.IMPACT_ANALYSIS.name
+                    assert agent.step_history[-1]["to_state"] == State.REPAIR_PLANNING.name
+                    assert agent.step_history[-1]["action"] == "impact_analyzed"
+                    assert agent.step_history[-1]["data"] == {"impact_report": {
+                        "node-1": {"population": 100, "criticality": "Low"},
+                        "node-2": {"population": 100, "criticality": "Low"}
+                    }}
 
         def describe_when_state_is_repair_planning():
             @pytest.fixture
@@ -144,6 +159,10 @@ def describe_infra_agent():
                     agent.run_step()
 
                     assert agent.state == State.FINAL
+                    assert agent.step_history[-1]["from_state"] == State.REPAIR_PLANNING.name
+                    assert agent.step_history[-1]["to_state"] == State.FINAL.name
+                    assert agent.step_history[-1]["action"] == "max_retries_reached"
+                    assert agent.step_history[-1]["data"] == {"retry_count": 3}
 
                 def it_increments_retry_count_first(agent):
                     agent.run_step()
@@ -169,6 +188,13 @@ def describe_infra_agent():
                     agent.run_step()
 
                     assert agent.state == State.EXECUTION
+                    assert agent.step_history[-1]["from_state"] == State.REPAIR_PLANNING.name
+                    assert agent.step_history[-1]["to_state"] == State.EXECUTION.name
+                    assert agent.step_history[-1]["action"] == "llm_decision_assign_crew"
+                    assert agent.step_history[-1]["data"] == {"decision": {
+                        "action": "assign_repair_crew",
+                        "arguments": {}
+                    }}
 
         def describe_when_state_is_execution():
             @pytest.fixture
@@ -212,6 +238,10 @@ def describe_infra_agent():
                     agent.run_step()
 
                     assert agent.state == State.RESCHEDULING
+                    assert agent.step_history[-1]["from_state"] == State.EXECUTION.name
+                    assert agent.step_history[-1]["to_state"] == State.RESCHEDULING.name
+                    assert agent.step_history[-1]["action"] == "assignments_succeeded"
+                    assert agent.step_history[-1]["data"] == {"details": {"node-1": "Assigned"}}
 
             def describe_and_some_assignments_fail():
                 @pytest.fixture
@@ -253,6 +283,17 @@ def describe_infra_agent():
                     agent.run_step()
 
                     assert agent.state == State.REPAIR_PLANNING
+                    assert agent.step_history[-1]["from_state"] == State.EXECUTION.name
+                    assert agent.step_history[-1]["to_state"] == State.REPAIR_PLANNING.name
+                    assert agent.step_history[-1]["action"] == "assignments_failed"
+                    assert agent.step_history[-1]["data"] == {
+                        "failed_nodes": ["node-2"],
+                        "details": {
+                            "node-1": "Assigned",
+                            "node-2": "Failed",
+                            "node-3": "Assigned"
+                        }
+                    }
 
         def describe_when_state_is_rescheduling():
             @pytest.fixture
@@ -271,6 +312,10 @@ def describe_infra_agent():
                     agent.run_step()
 
                     assert agent.state == State.FINAL
+                    assert agent.step_history[-1]["from_state"] == State.RESCHEDULING.name
+                    assert agent.step_history[-1]["to_state"] == State.FINAL.name
+                    assert agent.step_history[-1]["action"] == "repairs_completed"
+                    assert agent.step_history[-1]["data"] == {}
 
                 def it_calls_detect_failure_nodes(agent):
                     agent.run_step()
@@ -279,14 +324,18 @@ def describe_infra_agent():
 
             def describe_and_cascading_failures():
                 @pytest.fixture
-                def agent(agent_base):
-                    agent_base.sys.detect_failure_nodes.return_value = ["node-3"]
-                    return agent_base
+                def agent(agent_in_rescheduling):
+                    agent_in_rescheduling.sys.detect_failure_nodes.return_value = ["node-3"]
+                    return agent_in_rescheduling
 
                 def it_transitions_to_failure_detection(agent):
                     agent.run_step()
 
                     assert agent.state == State.FAILURE_DETECTION
+                    assert agent.step_history[-1]["from_state"] == State.RESCHEDULING.name
+                    assert agent.step_history[-1]["to_state"] == State.FAILURE_DETECTION.name
+                    assert agent.step_history[-1]["action"] == "cascading_failures"
+                    assert agent.step_history[-1]["data"] == {"new_failures": ["node-3"]}
 
     def describe_run_to_completion():
         def describe_when_no_failures():
@@ -351,6 +400,14 @@ def describe_infra_agent():
                 agent.handle_planning_step()
 
                 assert agent.state == State.EXECUTION
+                assert agent.step_history[-1]["to_state"] == State.EXECUTION.name
+                assert agent.step_history[-1]["action"] == "llm_decision_assign_crew"
+                assert agent.step_history[-1]["data"] == {
+                    "decision": {
+                        "action": "assign_repair_crew",
+                        "arguments": {"node_ids": ["node-1"], "crew_ids": ["crew-1"]}
+                    }
+                }
 
             def it_calls_llm_service(agent):
                 agent.handle_planning_step()
@@ -536,3 +593,44 @@ def describe_infra_agent():
                 assert context["conversation_history"][0]["tool"] == "tool-1"
                 assert context["conversation_history"][1]["tool"] == "tool-2"
                 assert context["conversation_history"][2]["tool"] == "tool-3"
+
+    def describe_get_summary():
+        def describe_when_agent_has_history():
+            @pytest.fixture
+            def agent(agent_base):
+                agent_base.memory = {
+                    "failures": ["node-1", "node-2"],
+                    "execution_result": {"status": "completed"}
+                }
+                return agent_base
+
+            def it_returns_summary(agent):
+                agent._transition_state(State.FAILURE_DETECTION, "initialize", {})
+                agent.state = State.FAILURE_DETECTION
+                agent._transition_state(State.IMPACT_ANALYSIS, "failures_detected", {})
+                agent.state = State.REPAIR_PLANNING
+                agent._transition_state(
+                    State.REPAIR_PLANNING,
+                    "llm_decision_use_tool",
+                    {"tool": "tool1", "arguments": {}, "result": {}}
+                )
+
+                summary = agent.get_summary()
+
+                assert summary["current_state"] == "REPAIR_PLANNING"
+                assert summary["total_steps"] == 3
+                assert summary["failures_detected"] == ["node-1", "node-2"]
+                assert summary["execution_result"] == {"status": "completed"}
+
+        def describe_when_agent_has_no_history():
+            @pytest.fixture
+            def agent(agent_base):
+                return agent_base
+
+            def it_returns_summary(agent):
+                summary = agent.get_summary()
+
+                assert summary["current_state"] == "INIT"
+                assert summary["total_steps"] == 0
+                assert summary["failures_detected"] == []
+                assert summary["execution_result"] is None
