@@ -12,6 +12,7 @@ class InfraAgent:
         self.sys = system_tools
         self.tools = agent_tools
         self.max_steps = 10
+        self.max_history_size = 5
         self.tool_descriptions = self.tools.get_tool_descriptions()
 
         self.state = State.INIT
@@ -95,11 +96,12 @@ class InfraAgent:
             return
 
     def handle_planning_step(self):
+        limited_history = self.memory['plan_history'][-self.max_history_size:] if self.memory['plan_history'] else []
+
         context = {
             "failures": self.memory['failures'],
             "impact_report": self.memory['impact_report'],
-            # TODO: limit the history to max_steps
-            "conversation_history": self.memory['plan_history']
+            "conversation_history": limited_history
         }
 
         response_str = self.llm_service.handle_request(
@@ -134,6 +136,6 @@ class InfraAgent:
                     print(f"[ERROR] Unknown tool {tool_name}")
                     # TODO: Handle to prevent getting stuck in the current state, perhaps retrying is a good idea
 
-        except json.JSONDecodeError:
+        except (ValueError, TypeError):
             print("[ERROR] Invalid JSON from LLM")
             # TODO: Handle to prevent getting stuck in the current state, perhaps retrying is a good idea

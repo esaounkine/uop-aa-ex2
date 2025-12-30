@@ -306,3 +306,104 @@ def describe_infra_agent():
                 agent.handle_planning_step()
 
                 assert agent.state == State.REPAIR_PLANNING
+
+        def describe_when_history_is_empty():
+            @pytest.fixture
+            def agent(agent_in_repair_planning):
+                agent_in_repair_planning.memory["plan_history"] = []
+                return agent_in_repair_planning
+
+            def it_passes_empty_history_to_llm(agent):
+                agent.handle_planning_step()
+
+                call_args = agent.llm_service.handle_request.call_args
+                context = call_args[0][1]
+                assert context["conversation_history"] == []
+
+        def describe_when_history_is_below_limit():
+            @pytest.fixture
+            def agent(agent_in_repair_planning):
+                agent_in_repair_planning.max_history_size = 3
+                agent_in_repair_planning.memory["plan_history"] = [
+                    {"role": "tool_output", "tool": "tool-1", "result": "result-1"},
+                    {"role": "tool_output", "tool": "tool-2", "result": "result-2"},
+                ]
+                return agent_in_repair_planning
+
+            def it_passes_all_history_to_llm(agent):
+                agent.handle_planning_step()
+
+                call_args = agent.llm_service.handle_request.call_args
+                context = call_args[0][1]
+                assert len(context["conversation_history"]) == 2
+
+            def it_preserves_history_order(agent):
+                agent.handle_planning_step()
+
+                call_args = agent.llm_service.handle_request.call_args
+                context = call_args[0][1]
+                assert context["conversation_history"][0]["tool"] == "tool-1"
+                assert context["conversation_history"][1]["tool"] == "tool-2"
+
+        def describe_when_history_exceeds_limit():
+            @pytest.fixture
+            def agent(agent_in_repair_planning):
+                agent_in_repair_planning.max_history_size = 3
+                agent_in_repair_planning.memory["plan_history"] = [
+                    {"role": "tool_output", "tool": "tool-1", "result": "result-1"},
+                    {"role": "tool_output", "tool": "tool-2", "result": "result-2"},
+                    {"role": "tool_output", "tool": "tool-3", "result": "result-3"},
+                    {"role": "tool_output", "tool": "tool-4", "result": "result-4"},
+                ]
+                return agent_in_repair_planning
+
+            def it_limits_history_to_max_size(agent):
+                agent.handle_planning_step()
+
+                call_args = agent.llm_service.handle_request.call_args
+                context = call_args[0][1]
+                assert len(context["conversation_history"]) == 3
+
+            def it_keeps_most_recent_entries(agent):
+                agent.handle_planning_step()
+
+                call_args = agent.llm_service.handle_request.call_args
+                context = call_args[0][1]
+                assert context["conversation_history"][0]["tool"] == "tool-2"
+                assert context["conversation_history"][1]["tool"] == "tool-3"
+                assert context["conversation_history"][2]["tool"] == "tool-4"
+
+            def it_discards_oldest_entries(agent):
+                agent.handle_planning_step()
+
+                call_args = agent.llm_service.handle_request.call_args
+                context = call_args[0][1]
+                tools = [entry["tool"] for entry in context["conversation_history"]]
+                assert "tool-1" not in tools
+
+        def describe_when_history_equals_limit():
+            @pytest.fixture
+            def agent(agent_in_repair_planning):
+                agent_in_repair_planning.max_history_size = 3
+                agent_in_repair_planning.memory["plan_history"] = [
+                    {"role": "tool_output", "tool": "tool-1", "result": "result-1"},
+                    {"role": "tool_output", "tool": "tool-2", "result": "result-2"},
+                    {"role": "tool_output", "tool": "tool-3", "result": "result-3"}
+                ]
+                return agent_in_repair_planning
+
+            def it_passes_all_history_to_llm(agent):
+                agent.handle_planning_step()
+
+                call_args = agent.llm_service.handle_request.call_args
+                context = call_args[0][1]
+                assert len(context["conversation_history"]) == 3
+
+            def it_preserves_all_entries(agent):
+                agent.handle_planning_step()
+
+                call_args = agent.llm_service.handle_request.call_args
+                context = call_args[0][1]
+                assert context["conversation_history"][0]["tool"] == "tool-1"
+                assert context["conversation_history"][1]["tool"] == "tool-2"
+                assert context["conversation_history"][2]["tool"] == "tool-3"
