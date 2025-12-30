@@ -13,10 +13,12 @@ class InfraAgent:
         self.tools = agent_tools
         self.max_steps = 10
         self.max_history_size = 5
+        self.max_retries = 3
         self.tool_descriptions = self.tools.get_tool_descriptions()
 
         self.state = State.INIT
         self.memory = {}
+        self.retry_count = 0
 
     def run_to_completion(self):
         step = 0
@@ -58,7 +60,14 @@ class InfraAgent:
             return
 
         elif self.state == State.REPAIR_PLANNING:
-            self.handle_planning_step()
+            success = self.handle_planning_step()
+            if not success:
+                self.retry_count += 1
+                if self.retry_count >= self.max_retries:
+                    print(f"[ERROR] Max retries ({self.max_retries}) reached. Transitioning to FINAL state.")
+                    self.state = State.FINAL
+            else:
+                self.retry_count = 0
             return
 
         elif self.state == State.EXECUTION:
@@ -121,6 +130,7 @@ class InfraAgent:
                 # TERMINAL ACTION
                 self.memory['pending_action'] = decision
                 self.state = State.EXECUTION
+                return True
 
             else:
                 tool_func = self.tools.get_tool(tool_name)
@@ -132,10 +142,19 @@ class InfraAgent:
                         "tool": tool_name,
                         "result": result
                     })
+                    return True
                 else:
                     print(f"[ERROR] Unknown tool {tool_name}")
-                    # TODO: Handle to prevent getting stuck in the current state, perhaps retrying is a good idea
+                    self.memory['plan_history'].append({
+                        "role": "error",
+                        "message": f"Unknown tool: {tool_name}"
+                    })
+                    return False
 
-        except (ValueError, TypeError):
-            print("[ERROR] Invalid JSON from LLM")
-            # TODO: Handle to prevent getting stuck in the current state, perhaps retrying is a good idea
+        except (ValueError, TypeError) as e:
+            print(f"[ERROR] Invalid JSON from LLM: {e}")
+            self.memory['plan_history'].append({
+                "role": "error",
+                "message": "Invalid JSON response from LLM"
+            })
+            return False

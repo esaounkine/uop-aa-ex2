@@ -103,6 +103,73 @@ def describe_infra_agent():
 
                     assert agent.state == State.REPAIR_PLANNING
 
+        def describe_when_state_is_repair_planning():
+            @pytest.fixture
+            def agent_in_repair_planning(agent_base):
+                agent_base.state = State.REPAIR_PLANNING
+                agent_base.memory = {
+                    "failures": ["node-1"],
+                    "impact_report": {},
+                    "plan_history": []
+                }
+                return agent_base
+
+            def describe_and_planning_fails_below_max_retries():
+                @pytest.fixture
+                def agent(agent_in_repair_planning):
+                    agent_in_repair_planning.llm_service.handle_request.return_value = "invalid json"
+                    agent_in_repair_planning.max_retries = 3
+                    agent_in_repair_planning.retry_count = 0
+                    return agent_in_repair_planning
+
+                def it_increments_retry_count(agent):
+                    agent.run_step()
+
+                    assert agent.retry_count == 1
+
+                def it_stays_in_repair_planning(agent):
+                    agent.run_step()
+
+                    assert agent.state == State.REPAIR_PLANNING
+
+            def describe_and_planning_fails_at_max_retries():
+                @pytest.fixture
+                def agent(agent_in_repair_planning):
+                    agent_in_repair_planning.llm_service.handle_request.return_value = "invalid json"
+                    agent_in_repair_planning.max_retries = 3
+                    agent_in_repair_planning.retry_count = 2
+                    return agent_in_repair_planning
+
+                def it_transitions_to_final(agent):
+                    agent.run_step()
+
+                    assert agent.state == State.FINAL
+
+                def it_increments_retry_count_first(agent):
+                    agent.run_step()
+
+                    assert agent.retry_count == 3
+
+            def describe_and_planning_succeeds_after_retries():
+                @pytest.fixture
+                def agent(agent_in_repair_planning):
+                    agent_in_repair_planning.llm_service.handle_request.return_value = json.dumps({
+                        "action": "assign_repair_crew",
+                        "arguments": {}
+                    })
+                    agent_in_repair_planning.retry_count = 2
+                    return agent_in_repair_planning
+
+                def it_resets_retry_count(agent):
+                    agent.run_step()
+
+                    assert agent.retry_count == 0
+
+                def it_transitions_to_execution(agent):
+                    agent.run_step()
+
+                    assert agent.state == State.EXECUTION
+
         def describe_when_state_is_execution():
             @pytest.fixture
             def agent_in_execution(agent_base):
@@ -286,10 +353,17 @@ def describe_infra_agent():
                 agent_in_repair_planning.tools.get_tool.return_value = None
                 return agent_in_repair_planning
 
-            def it_does_not_add_to_history(agent):
+            def it_returns_false(agent):
+                result = agent.handle_planning_step()
+
+                assert result is False
+
+            def it_adds_error_to_history(agent):
                 agent.handle_planning_step()
 
-                assert len(agent.memory["plan_history"]) == 0
+                assert len(agent.memory["plan_history"]) == 1
+                assert agent.memory["plan_history"][0]["role"] == "error"
+                assert "Unknown tool" in agent.memory["plan_history"][0]["message"]
 
             def it_does_not_transition_state(agent):
                 agent.handle_planning_step()
@@ -301,6 +375,18 @@ def describe_infra_agent():
             def agent(agent_in_repair_planning):
                 agent_in_repair_planning.llm_service.handle_request.return_value = "invalid json"
                 return agent_in_repair_planning
+
+            def it_returns_false(agent):
+                result = agent.handle_planning_step()
+
+                assert result is False
+
+            def it_adds_error_to_history(agent):
+                agent.handle_planning_step()
+
+                assert len(agent.memory["plan_history"]) == 1
+                assert agent.memory["plan_history"][0]["role"] == "error"
+                assert "Invalid JSON" in agent.memory["plan_history"][0]["message"]
 
             def it_does_not_transition_state(agent):
                 agent.handle_planning_step()
