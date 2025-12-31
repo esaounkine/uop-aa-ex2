@@ -9,10 +9,10 @@ from src.infra_fail_mngr.states import State
 @pytest.fixture
 def agent_base(mocker):
     llm_service = mocker.Mock()
-    system_tools = mocker.Mock()
-    agent_tools = mocker.Mock()
-    agent_tools.get_tool_descriptions.return_value = "tools"
-    return InfraAgent(llm_service, system_tools, agent_tools)
+    _system_tools = mocker.Mock()
+    _agent_tools = mocker.Mock()
+    _agent_tools.get_tool_descriptions.return_value = "tools"
+    return InfraAgent(llm_service, _system_tools, _agent_tools)
 
 
 def describe_infra_agent():
