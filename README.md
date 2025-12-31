@@ -161,7 +161,7 @@ Once the virtual environment is activated, you can run the project:
 #### Run the main application
 
 ```bash
-uv run python -m infra_fail_mngr.main
+uv run python -m infra_fail_mngr.test_run.main
 ```
 
 #### Run all tests

@@ -1,4 +1,4 @@
-from .wire import wire
+from infra_fail_mngr.test_run.wire import wire
 
 
 def main():

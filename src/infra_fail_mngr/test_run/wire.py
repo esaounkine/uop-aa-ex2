@@ -1,7 +1,7 @@
-from .agent import InfraAgent
-from .domain import SystemRepository, AgentRepository
-from .llm import LLMServiceImpl, LLMClientImpl
-from .tools import SystemTools, AgentTools
+from infra_fail_mngr.agent import InfraAgent
+from infra_fail_mngr.domain import SystemRepository, AgentRepository
+from infra_fail_mngr.llm import LLMServiceImpl, LLMClientImpl
+from infra_fail_mngr.tools import SystemTools, AgentTools
 
 
 class InlineSystemRepo(SystemRepository):
