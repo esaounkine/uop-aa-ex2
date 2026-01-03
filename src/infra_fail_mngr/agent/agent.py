@@ -4,6 +4,7 @@ from ..llm.llm_service import LLMService
 from ..prompts.system_prompts import get_system_prompt
 from ..states import State
 from ..tools import SystemTools, AgentTools
+from ..vis import mermaid_to_link, step_history_to_flow_diagram
 
 
 class InfraAgent:
@@ -183,9 +184,12 @@ class InfraAgent:
             return False
 
     def get_summary(self):
+        mermaid_code = step_history_to_flow_diagram(self.step_history)
+        mermaid_live_url = mermaid_to_link(mermaid_code)
         return {
             "current_state": self.state.name,
             "total_steps": len(self.step_history),
             "failures_detected": self.memory.get('failures', []),
             "execution_result": self.memory.get('execution_result'),
+            "vis_url": mermaid_live_url,
         }

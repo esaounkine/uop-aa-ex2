@@ -22,6 +22,7 @@ def describe_when_there_are_failures():
 
         def it_reaches_final_state(agent):
             agent.run_to_completion()
-            print(agent.step_history)
+
+            print(agent.get_summary())
 
             assert agent.state == State.FINAL

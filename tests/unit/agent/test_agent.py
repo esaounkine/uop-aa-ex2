@@ -620,6 +620,7 @@ def describe_infra_agent():
                 assert summary["total_steps"] == 3
                 assert summary["failures_detected"] == ["node-1", "node-2"]
                 assert summary["execution_result"] == {"status": "completed"}
+                assert summary["vis_url"].startswith("https://mermaid.live/edit#pako:")
 
         def describe_when_agent_has_no_history():
             @pytest.fixture
