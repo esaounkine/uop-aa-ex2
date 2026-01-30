@@ -40,7 +40,7 @@ class AgentTools:
             "is_raining": temperature > 20
         }
     
-    def is_holiday(self, date: datetime, **kwargs) -> bool:  #* added # https://en.wikipedia.org/wiki/Public_holidays_in_Greece
+    def is_holiday(self, date: datetime, **kwargs) -> bool:  # https://en.wikipedia.org/wiki/Public_holidays_in_Greece
         """
         Check whether a given date is a fixed-date public holiday in Greece.
 
@@ -124,8 +124,6 @@ class AgentTools:
             "node": node,
             "time": repair_time
         }
-
-    # TODO: Implement rest of the interfaces to expose more tools to the agent
 
     # Internal
 
