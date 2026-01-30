@@ -6,7 +6,6 @@ from src.infra_fail_mngr.tools.agent_tools import AgentTools
 
 @pytest.fixture
 def repo_mock(mocker):
-    # return mocker.Mock()
     mock_repo = mocker.Mock()
     mock_repo.get_weather_at_location.return_value = 25
     mock_repo.estimate_travel_time_in_ms.return_value = 3600000
@@ -94,7 +93,7 @@ def describe_agent_tools():
         def it_includes_default_tool_name(agent_tools_base):
             result = agent_tools_base.get_tool_descriptions()
 
-            assert "get_weather" in result  #* "get_weather_at_location"
+            assert "get_weather" in result
 
         def it_includes_function_signature(agent_tools_base):
             result = agent_tools_base.get_tool_descriptions()
@@ -104,7 +103,7 @@ def describe_agent_tools():
         def it_includes_docstring(agent_tools_base):
             result = agent_tools_base.get_tool_descriptions()
 
-            assert "Return basic weather metrics for a location." in result  #* "Returns metrics for a node"
+            assert "Return basic weather metrics for a location." in result
 
         def describe_when_additional_tools_provided():
             @pytest.fixture
@@ -137,14 +136,14 @@ def describe_agent_tools():
             def it_includes_both_default_and_test_tools(agent_tools_with_additional):
                 result = agent_tools_with_additional.get_tool_descriptions()
 
-                assert "get_weather" in result  #* "get_weather_at_location"
+                assert "get_weather" in result
                 assert "test_tool_1" in result
 
             def it_separates_tools_entries(agent_tools_with_additional):
                 result = agent_tools_with_additional.get_tool_descriptions()
 
                 lines = result.split("\n")
-                assert len(lines) > 2  #* len(lines) == 2
+                assert len(lines) > 2
 
         def describe_when_tool_has_no_docstring():
             @pytest.fixture
@@ -168,13 +167,13 @@ def describe_agent_tools():
         def describe_when_tool_exists():
             @pytest.fixture
             def tool_name():
-                return "get_weather"  #* "get_weather_at_location"
+                return "get_weather"
 
             def it_returns_function(agent_tools_base, tool_name):
                 result = agent_tools_base.get_tool(tool_name)
 
                 assert callable(result)
-                assert result.__name__ == "get_weather"  #* "get_weather_at_location"
+                assert result.__name__ == "get_weather"
 
         def describe_when_tool_does_not_exist():
             @pytest.fixture
