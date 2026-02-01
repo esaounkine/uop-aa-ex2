@@ -1,192 +1,57 @@
-import inspect
-from typing import Dict, List
-from datetime import datetime
+from typing import List, Dict
 
-from ..domain import AgentRepository
+from ..domain import SystemRepository
 
 
-class AgentTools:
-    def __init__(self, repo: AgentRepository, additional_tools: list):
+class SystemTools:
+    def __init__(self, repo: SystemRepository):
         self.repo = repo
-        self.AGENT_TOOLS = [
-            self.get_weather_at_location,
-            self.is_holiday,
-            self.is_weekend,
-            self.get_time_of_day,
-            self.estimate_travel_time,
-            self.estimate_repair_time,
-            self.get_crew_location,
-            self.is_crew_available,
-            self.get_available_crews
-        ]
-        self.AGENT_TOOLS.extend(additional_tools)
 
-    def get_weather_at_location(self, location: str, **kwargs) -> Dict:
+    def detect_failure_nodes(self, **kwargs) -> List[str]:
         """
-        Return basic weather metrics for a location.
+        Scans the network for broken nodes.
+        """
+        return self.repo.get_failed_nodes()
+
+    def estimate_impact(self, node_id: str, **kwargs) -> Dict:
+        """
+        Estimate the operational impact of a node failure.
 
         Args:
-            location (str): Location identifier.
+            node_id (str): Identifier of the affected node.
 
         Returns:
             dict: A dictionary containing:
-                - "location" (str): The location identifier.
-                - "temperature" (int): Temperature value.
-                - "is_raining" (bool): A derived condition flag.
+                - "population_affected" (int): Estimated number of impacted users.
+                - "criticality" (str): Impact level ("High" or "Low").
         """
-        temperature = self.repo.get_weather_at_location(location)
+        details = self.repo.get_node_details(node_id)
 
         return {
-            "location": location,
-            "temperature": temperature,
-            "is_raining": temperature < 15
+            # mock data
+            "population_affected": 5000 if details.get("critical") else 100,
+            "criticality": "High" if details.get("critical") else "Low"
         }
-    
-    def is_holiday(self, date: datetime, **kwargs) -> bool:
+
+    def assign_repair_crew(self, node_ids: List[str], crew_ids: List[str], **kwargs) -> Dict:
         """
-        Check whether a given date is a fixed-date public holiday in Greece.
+        Assigns crews to nodes.
 
         Args:
-            date (datetime): The date to check.
-
-        Returns:
-            bool: True if the date is a public holiday, False otherwise.
-        """
-        is_public_holiday = self.repo.is_holiday(date)
-        return is_public_holiday
-    
-    def is_weekend(self, date: datetime, **kwargs) -> bool:
-        """
-        Check whether a given date is Saturday or Sunday.
-
-        Args:
-            date (datetime): The date to check.
-
-        Returns:
-            bool: True if the date is Saturday or Sunday, False otherwise.
-        """
-        is_weekend = self.repo.is_weekend(date)
-        return is_weekend
-        
-    def get_time_of_day(self, hour: int, **kwargs) -> str:
-        """
-        Categorize an hour of the day as daytime, evening, or overnight.
-        
-        Args:
-            hour (int): Hour of the day (0–23).
-        
-        Returns:
-            str: One of "daytime", "evening", or "overnight".
-        """
-        time_of_day = self.repo.get_time_of_day(hour)
-        return time_of_day
-
-    def estimate_travel_time(self, origin: str, destination: str, **kwargs) -> Dict[str, str | int]:
-        """
-         Estimate the travel time between two locations.
-
-        Args:
-            origin (str): The starting location.
-            destination (str): The destination location.
+            node_ids (List[str]): List of node ids.
+            crew_ids (List[str]): List of crew ids.
 
         Returns:
             dict: A dictionary containing:
-                - "origin" (str): The origin location.
-                - "destination" (str): The destination location.
-                - "time" (int): Estimated travel time in milliseconds.
+                - "status" (str): Assignment process status ("completed").
+                - "details" (dict): Mapping of node_id to assignment result ("Assigned" or "Failed").
         """
-        travel_time = self.repo.estimate_travel_time(origin, destination)
-        
-        return {
-            "origin": origin,
-            "destination": destination,
-            "time": travel_time
-        }
-    
-    def estimate_repair_time(self, node: str, **kwargs) -> Dict[str, str | int]:
-        """
-         Estimate the repair time for a node.
-
-        Args:
-            node (str): The node type.
-
-        Returns:
-            dict: A dictionary containing:
-                - "node" (str): The node type.
-                - "time" (int): Estimated repair time in milliseconds.
-        """
-        repair_time = self.repo.estimate_repair_time(node)
+        assignments = {}
+        for node, crew in zip(node_ids, crew_ids):
+            success = self.repo.assign_crew(node, crew)
+            assignments[node] = "Assigned" if success else "Failed"
 
         return {
-            "node": node,
-            "time": repair_time
+            "status": "completed",
+            "details": assignments,
         }
-
-
-    def get_crew_location(self, crew_id: str, **kwargs) -> Dict[str, str]:
-        """
-        Retrieve the current assigned location of a repair crew.
-
-        Args:
-            crew_id (str): Identifier of the crew.
-
-        Returns:
-            dict: A dictionary containing:
-                - "crew_id" (str): Identifier of the crew.
-                - "location" (str): The location where the crew is currently assigned.
-        """
-        crew_location = self.repo.crew_location(crew_id)
-        return {
-            "crew_id": crew_id,
-            "location": crew_location
-        }
-    
-    def is_crew_available(self, crew_id: str, **kwargs) -> Dict[str, str | bool]:
-        """
-        Check whether a given repair crew is currently available.
-
-        Args:
-            crew_id (str): Identifier of the crew.
-
-        Returns:
-            dict: A dictionary containing:
-                - "crew_id" (str): Identifier of the crew.
-                - "is_available" (bool): True if the crew is available, False otherwise.
-        """
-        crew_location = self.repo.is_crew_available(crew_id)
-        return {
-            "crew_id": crew_id,
-            "is_available": crew_location
-        }
-    
-    def get_available_crews(self, **kwargs) -> List[str]:
-        """
-        Retrieve the list of currently available repair crews.
-
-        Returns:
-            List[str]: A list of crew identifiers that are currently available for assignment.
-        """
-        available_crews = self.repo.get_available_crews()
-        return available_crews
-
-
-    # Internal
-
-    def get_tool_descriptions(self):
-        """
-        Reflect into the ENABLED_TOOLS list to generate the list of available tools.
-        """
-        descriptions = []
-        for func in self.AGENT_TOOLS:
-            name = func.__name__
-            doc = inspect.getdoc(func)
-            sig = inspect.signature(func)
-            descriptions.append(f"{name}{sig} - {doc}")
-
-        return "\n".join(descriptions)
-
-    def get_tool(self, name: str):
-        """
-        Helper to match the function to the name.
-        """
-        return getattr(self, name, None)
