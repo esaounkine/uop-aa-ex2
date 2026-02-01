@@ -84,7 +84,7 @@ class AgentTools:
             return 'overnight'
 
 
-    def estimate_travel_time(self, origin: str, destination: str, **kwargs) -> int:
+    def estimate_travel_time(self, origin: str, destination: str, **kwargs) -> Dict[str, str | int]:
         """
          Estimate the travel time between two locations.
 
@@ -106,7 +106,7 @@ class AgentTools:
             "time": travel_time
         }
     
-    def estimate_repair_time(self, node: str, **kwargs) -> int:
+    def estimate_repair_time(self, node: str, **kwargs) -> Dict[str, str | int]:
         """
          Estimate the repair time for a node.
 
