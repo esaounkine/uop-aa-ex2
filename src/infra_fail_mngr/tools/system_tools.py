@@ -28,7 +28,6 @@ class SystemTools:
         details = self.repo.get_node_details(node_id)
 
         return {
-            # mock data
             "population_affected": 5000 if details.get("critical") else 100,
             "criticality": "High" if details.get("critical") else "Low"
         }
