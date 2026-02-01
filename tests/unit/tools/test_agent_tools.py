@@ -21,7 +21,7 @@ def agent_tools_base(repo_mock):
 def describe_agent_tools():
     def describe_get_weather():
         def it_returns_weather_for_location(agent_tools_base):
-            location = "athens"
+            location = "location-1"
             result = agent_tools_base.get_weather(location)
 
             assert result["location"] == location
@@ -69,16 +69,16 @@ def describe_agent_tools():
             assert not is_weekend
 
     def describe_travel_time():
-        def estimate_travel_time(agent_tools_base):
-            origin = "athens"
-            destination = "volos"
+        def it_estimates_travel_time(agent_tools_base):
+            origin = "location-1"
+            destination = "location-2"
             result = agent_tools_base.estimate_travel_time(origin, destination)
 
             assert result["origin"] == origin
             assert result["destination"] == destination
 
     def describe_repair_time():
-        def estimate_repair_time(agent_tools_base):
+        def it_estimates_repair_time(agent_tools_base):
             node = "pipe"
             result = agent_tools_base.estimate_repair_time(node)
 
