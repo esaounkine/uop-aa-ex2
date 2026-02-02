@@ -226,8 +226,6 @@ Decoupling and separation of concerns (to drive testability and concurrent work)
 No challenges really.
 We had the flow diagram done before writing the code, that's how the implementation followed the specification.
 
-[TODO] Complete this section with the opinions of the team members.
-
 ### Context management
 
 To copmly with the "Stateless LLM" constraint and token limits, we implemented a "Sliding window" mechanism.
