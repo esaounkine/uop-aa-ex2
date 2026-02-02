@@ -273,6 +273,7 @@ confirming JSON schema compliance.
 For the system evaluation, we implemented 8 critical test scenarios covering the spectrum of potential failures in the FSM-LLM hybrid architecture. Each scenario tests specific functionalities and robustness:
 
 test_invalid_json_from_llm: Tests resilience against formatting errors.
+
 test_llm_missing_action_field: Tests processing of invalid responses.
 test_unknown_tool_from_llm: Tests handling of unavailable actions.
 test_assignment_failure_single_node: Tests retry logic under failed execution conditions.
