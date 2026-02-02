@@ -275,11 +275,17 @@ For the system evaluation, we implemented 8 critical test scenarios covering the
 test_invalid_json_from_llm: Tests resilience against formatting errors.
 
 test_llm_missing_action_field: Tests processing of invalid responses.
+
 test_unknown_tool_from_llm: Tests handling of unavailable actions.
+
 test_assignment_failure_single_node: Tests retry logic under failed execution conditions.
+
 test_partial_success_multi_node: Tests management of mixed results.
+
 test_max_retries_exhaustion: Tests termination mechanisms.
+
 test_large_number_of_failures_stress: Tests system's ability to maintain operability when facing multiple faults.
+
 test_llm_timeout_raises: Tests handling of delays.
 
 ## Analysis of a Specific Execution Example with Log Commentary
@@ -287,16 +293,22 @@ test_llm_timeout_raises: Tests handling of delays.
 Scenario: Partial Success at Multiple Failure Points (test_partial_success_multi_node)
 
 STATE: INIT: System initialization, health check (all components load correctly).
+
 STATE: FAILURE_DETECTION
 [SYSTEM] Detected: ['node1', 'node2']: The FSM transitions to the detection state. The internal get_failed_nodes tool identifies both failures. Successful operation - deterministic check works as expected.
+
 STATE: IMPACT_ANALYSIS: Criticality analysis. Details for each node (population, location, etc.) would be collected here. The logs do not show data collection, likely due to test configuration.
+
 STATE: REPAIR_PLANNING
 [LLM DECISION] assign_repair_crew with {'node_ids': ['node1', 'node2'], 'crew_ids': ['crew1', 'crew2']}: Critical failure point. The LLM makes a decision to assign both crews simultaneously. Identified issues are the lack of prioritization and absence of strategy.
+
 STATE: EXECUTION
 [EXECUTION] Dispatching Crews: {'node_ids': ['node1', 'node2'], 'crew_ids': ['crew1', 'crew2']}
 [EXECUTION] Some assignments failed: ['node2']: Mixed execution. The system reports success for crew1 → node1 and failure for crew2 → node2.
+
 STATE: REPAIR_PLANNING
 [LLM DECISION] assign_repair_crew with {'node_ids': ['node1', 'node2'], 'crew_ids': ['crew1', 'crew2']}: Main system failure point. The agent returns to planning, but loses the successful assignment by requesting re-assignment of crew1 to node1. It fails to provide failure information to the LLM; therefore, the LLM is unaware that node2 has a prior failure and repeats the same decision without new context, producing the same output.
+
 STATE: EXECUTION
 [EXECUTION] Dispatching Crews: {'node_ids': ['node1', 'node2'], 'crew_ids': ['crew1', 'crew2']}
 [EXECUTION] Some assignments failed: ['node2']: Infinite loop, meaning it repeats the same error and the system would continue requesting the same assignment indefinitely.
