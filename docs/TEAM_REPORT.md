@@ -166,13 +166,13 @@ sequenceDiagram
     
     LLM-->>Agent: JSON {action: "get_available_crews", <br/>args: {}}
     Agent->>AT: get_available_crews()
-    AT-->>Agent: ["C1", "C2"]
+    AT-->>Agent: ["Crew_1", "Crew_2"]
     Agent->>LLM: Prompt with context (failures, impact, agent tool call responses)
     Note right of LLM: Reasoning: Need more data<br/>Currently unknown:<br/>- [x] crews available<br/>- [ ] crew ETA<br/>- [ ] crew capacity<br/>...
 
     Note over Agent, LLM: Having gathered all the missing details by calling all available agent tools, the LLM is finally able to reason what is the best crew assignment given the circumstances
 
-    LLM-->>Agent: JSON {action: "assign_repair_crew", <br/>args: {nodes: ["Node_A", "Node_B"], crews: ["C1", "C2"]}}
+    LLM-->>Agent: JSON {action: "assign_repair_crew", <br/>args: {nodes: ["Node_A", "Node_B"], crews: ["Crew_1", "Crew_2"]}}
 
     Note over Agent: State: EXECUTION
     Agent->>ST: assign_repair_crew(nodes, crews)
@@ -205,11 +205,14 @@ We separated the tools that are used internally by the agent (`system_tools`), o
 | get_node_details | system | Returns details for a node.                             |
 | assign_crew | system | Terminal action - assign a crew to repair a node | 
 | get_weather_at_location | agent  | Returns weather for a location                  |
-| get_available_crews | agent  | Returns a list of available crews               |
-| get_crew_location | agent  | Returns the location of a crew                  |
-| get_crew_remaining_capacity | agent  | Returns the remaining capacity of a crew        |
-| estimate_repair_time | agent  | Returns an estimated repair time for a crew     |
-| estimate_arrival_time | agent  | Returns an estimated arrival time for a crew    |
+| is_holiday | agent | Returns whether the given date is a public holiday |
+| is_weekend | agent | Returns whether the given date is Saturday or Sunday |
+| get_time_of_day | agent | Returns a time-of-day category string for a given hour |
+| estimate_travel_time | agent | Returns origin, destination, and estimated travel time |
+| estimate_repair_time | agent | Returns node id and estimated repair time |
+| crew_location | agent | Returns crew id and current location |
+| is_crew_available | agent | Returns crew id and availability status |
+| get_available_crews | agent | Returns a list of available crew ids |
 
 The `system` tools are essential to the FSM logic to be able to transition states.
 Only the final state tool (`assign_crew`) is exposed to the LLM.
