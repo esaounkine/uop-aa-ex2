@@ -316,9 +316,15 @@ STATE: EXECUTION
 ## Conclusion
 
 The Hybrid Architecture (FSM + LLM) operates effectively by combining the Finite State Machine, which provides structure and predictability—ensuring processes execute reliably—with the LLM, which offers flexibility in decision-making for complex situations, preventing resource waste and unpredictable behavior.
+
 Based on this, Context Management proved crucial for LLM performance, with the implementation of a sliding window mechanism. However, their instability necessitated an external memory and history management system for correct decision-making across multiple iterations.
+
 Similarly, designing for testability accelerated development. Using design patterns combined with dependency isolation allowed for the creation of fast and reliable testing environments. Furthermore, end-to-end tests revealed issues in the overall flow and robustness that unit tests were unable to identify.
+
 Error checking and handling form the core of system reliability. Given that LLMs are not inherently reliable, implementing robust validation mechanisms and automatic retries was essential. Moreover, the lack of a feedback mechanism between execution and planning phases led to infinite retry loops, particularly in partial failure scenarios.
+
 Finally, the architectural decision-making affects scalability. The system demonstrated the ability to handle up to 50 concurrent faults. However, the sequential nature of the FSM, combined with the lack of parallel processing, presents a potential bottleneck in real-world scenarios with hundreds of simultaneous events.
+
+In a version 2.0, we would improve by:
 
 First, enhancing robustness through a smart multi-level fallback mechanism and improved error logging. Then, extending the state model and creating a "deep memory" for failure history. Subsequently, evolving the architecture towards a multi-agent and asynchronous structure for better scalability. Next, integrating optimization algorithms and simulation mechanisms for improved decision-making. Finally, developing comprehensive tools for monitoring, debugging, and auto-tuning for better operation and maintenance in a production environment.
