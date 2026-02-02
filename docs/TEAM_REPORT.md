@@ -270,10 +270,42 @@ confirming JSON schema compliance.
 
 ## Case study
 
-[TODO] Describe an execution example with comments on log entries
+For the system evaluation, we implemented 8 critical test scenarios covering the spectrum of potential failures in the FSM-LLM hybrid architecture. Each scenario tests specific functionalities and robustness:
+
+test_invalid_json_from_llm: Tests resilience against formatting errors.
+test_llm_missing_action_field: Tests processing of invalid responses.
+test_unknown_tool_from_llm: Tests handling of unavailable actions.
+test_assignment_failure_single_node: Tests retry logic under failed execution conditions.
+test_partial_success_multi_node: Tests management of mixed results.
+test_max_retries_exhaustion: Tests termination mechanisms.
+test_large_number_of_failures_stress: Tests system's ability to maintain operability when facing multiple faults.
+test_llm_timeout_raises: Tests handling of delays.
+
+## Analysis of a Specific Execution Example with Log Commentary
+
+Scenario: Partial Success at Multiple Failure Points (test_partial_success_multi_node)
+
+STATE: INIT: System initialization, health check (all components load correctly).
+STATE: FAILURE_DETECTION
+[SYSTEM] Detected: ['node1', 'node2']: The FSM transitions to the detection state. The internal get_failed_nodes tool identifies both failures. Successful operation - deterministic check works as expected.
+STATE: IMPACT_ANALYSIS: Criticality analysis. Details for each node (population, location, etc.) would be collected here. The logs do not show data collection, likely due to test configuration.
+STATE: REPAIR_PLANNING
+[LLM DECISION] assign_repair_crew with {'node_ids': ['node1', 'node2'], 'crew_ids': ['crew1', 'crew2']}: Critical failure point. The LLM makes a decision to assign both crews simultaneously. Identified issues are the lack of prioritization and absence of strategy.
+STATE: EXECUTION
+[EXECUTION] Dispatching Crews: {'node_ids': ['node1', 'node2'], 'crew_ids': ['crew1', 'crew2']}
+[EXECUTION] Some assignments failed: ['node2']: Mixed execution. The system reports success for crew1 → node1 and failure for crew2 → node2.
+STATE: REPAIR_PLANNING
+[LLM DECISION] assign_repair_crew with {'node_ids': ['node1', 'node2'], 'crew_ids': ['crew1', 'crew2']}: Main system failure point. The agent returns to planning, but loses the successful assignment by requesting re-assignment of crew1 to node1. It fails to provide failure information to the LLM; therefore, the LLM is unaware that node2 has a prior failure and repeats the same decision without new context, producing the same output.
+STATE: EXECUTION
+[EXECUTION] Dispatching Crews: {'node_ids': ['node1', 'node2'], 'crew_ids': ['crew1', 'crew2']}
+[EXECUTION] Some assignments failed: ['node2']: Infinite loop, meaning it repeats the same error and the system would continue requesting the same assignment indefinitely.
 
 ## Conclusion
 
-[TODO] What have we learned?
+The Hybrid Architecture (FSM + LLM) operates effectively by combining the Finite State Machine, which provides structure and predictability—ensuring processes execute reliably—with the LLM, which offers flexibility in decision-making for complex situations, preventing resource waste and unpredictable behavior.
+Based on this, Context Management proved crucial for LLM performance, with the implementation of a sliding window mechanism. However, their instability necessitated an external memory and history management system for correct decision-making across multiple iterations.
+Similarly, designing for testability accelerated development. Using design patterns combined with dependency isolation allowed for the creation of fast and reliable testing environments. Furthermore, end-to-end tests revealed issues in the overall flow and robustness that unit tests were unable to identify.
+Error checking and handling form the core of system reliability. Given that LLMs are not inherently reliable, implementing robust validation mechanisms and automatic retries was essential. Moreover, the lack of a feedback mechanism between execution and planning phases led to infinite retry loops, particularly in partial failure scenarios.
+Finally, the architectural decision-making affects scalability. The system demonstrated the ability to handle up to 50 concurrent faults. However, the sequential nature of the FSM, combined with the lack of parallel processing, presents a potential bottleneck in real-world scenarios with hundreds of simultaneous events.
 
-[TODO] What would we improve in the next version?
+First, enhancing robustness through a smart multi-level fallback mechanism and improved error logging. Then, extending the state model and creating a "deep memory" for failure history. Subsequently, evolving the architecture towards a multi-agent and asynchronous structure for better scalability. Next, integrating optimization algorithms and simulation mechanisms for improved decision-making. Finally, developing comprehensive tools for monitoring, debugging, and auto-tuning for better operation and maintenance in a production environment.
