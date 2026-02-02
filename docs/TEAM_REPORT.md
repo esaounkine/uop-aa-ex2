@@ -246,20 +246,27 @@ LLM is requested to respond with a JSON payload of a specific structure.
 The system prompts inject a specific JSON schema and the Python controller parses this response.
 If parsing fails, the error is logged to memory and submitted back to the LLM, hoping it will return a better response next time (no guarantee).
 
-Prompt Structure & Decision Making
-The system uses a three-layer prompt assembly (prompt_formatting.py). The include_context() method injects JSON operational data such as failures and impact reports. include_response_format() defines a strict JSON schema with concrete examples for both information gathering and final assignments. include_tools() adds available tools with complete descriptions.
-The state-aware prompting (system_prompts.py) provides different prompts for each agent phase through get_prompt_for_state(). Each state like REPAIR_PLANNING and EXECUTION has specialized instructions that help the LLM make context-aware decisions.
+LLM Client
+The LLM client defines the communication interface through the LLMClient protocol and its mock implementation in llm_client.py. Methods such as generate() return predefined or default JSON responses. In test mode, the client produces deterministic data to ensure predictable unit tests, while in production it synthesizes reasonable fallback actions. This design guarantees consistent performance in real-world scenarios and reliability during automated testing.
 
-JSON Schema Enforcement
-A strict schema is enforced: {"thoughts": "...", "action": "...", "arguments": {...}}. The schema is reinforced with concrete examples in the prompt showing both information gathering and final assignment patterns, improving LLM compliance.
+LLM Service
+The LLMService in llm_service.py acts as the central controller with methods like 
+handle_request() (prompt construction, LLM invocation, response processing) and 
+_limit_context() (context management with sliding window). The service distinguishes 
+test from production responses and returns Union[str, Dict] for compatibility. 
+Invalid or empty responses trigger controlled errors.
 
-LLM Service & Client
-The dual-mode client (llm_client.py) operates differently in test vs. production. In test mode it returns empty string for deterministic testing, while in production mode it auto-generates default JSON responses to prevent system hangs.
-The intelligent parsing (llm_service.py) includes _limit_context() which applies a sliding window (2000 characters) for context management. The service distinguishes test from production responses and returns string for agent.py or dict for tests accordingly.
+Prompt Formatting 
+The prompt_formatting.py module provides utility functions that assemble a unified, well-structured prompt. Functions like include_context(), include_response_format(), and include_tools() incorporate contextual information, enforce the strict JSON response schema, and list the available tools for the agent. This approach delivers comprehensive and unambiguous instructions to the LLM, preventing deviations, malformed JSON output, or incompatibilities with downstream components.
 
-Decision Process
-The LLM follows progressive reasoning: first identify missing information, then call appropriate tools sequentially, and finally make assignments only when all data is collected. This creates checklist-driven decision making.
-Error recovery logs JSON parsing failures to memory, creating a feedback loop for self-correction. Tool-aware decisions are enhanced with dynamic tool injection that includes signatures and documentation for better tool selection.
+System Prompts
+The system_prompts.py file contains specialized prompts for each crisis management 
+phase through functions such as get_failure_detection_prompt(), 
+get_repair_planning_prompt(), and get_execution_prompt(). Each prompt defines 
+the LLM's role, objectives, decision-making rules, and available tools while 
+confirming JSON schema compliance.
+
+
 
 ## Case study
 
